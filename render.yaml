@@ -3,22 +3,24 @@ services:
   - type: web
     name: querymind-api
     runtime: python
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements.txt && python -m app.database
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GOOGLE_API_KEY
-        sync: false          # you will enter this manually in Render dashboard
+        sync: false
     autoDeploy: true
 
   # ── Streamlit frontend ───────────────────────────────────────────────────────
   - type: web
     name: querymind-streamlit
     runtime: python
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements.txt
     startCommand: streamlit run streamlit_app.py --server.port $PORT --server.address 0.0.0.0
     envVars:
       - key: GOOGLE_API_KEY
         sync: false
       - key: API_URL
-        sync: false          # set this to the querymind-api URL after first deploy
+        sync: false
     autoDeploy: true
