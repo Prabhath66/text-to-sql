@@ -1,0 +1,16 @@
+langchain==0.3.25
+langchain-community==0.3.24
+langchain-google-genai==2.1.4
+langchain-text-splitters==0.3.8
+sqlalchemy==2.0.40
+fastapi==0.115.12
+uvicorn==0.34.2
+streamlit==1.45.1
+requests==2.32.3
+plotly==6.0.1
+pandas==2.2.3
+python-dotenv==1.1.0
+pydantic==2.11.4
+openpyxl==3.1.5
+xlrd==2.0.1
+python-multipart==0.0.20

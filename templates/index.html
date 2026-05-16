@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QueryMind — Text-to-SQL Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=6" />
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       SIDEBAR
+  ═══════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-name">QueryMind</span>
+        <span class="logo-tag">Text-to-SQL</span>
+      </div>
+    </div>
+
+    <!-- Database section -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+        Database
+        <button class="sidebar-refresh-btn" onclick="loadSidebarTables()" title="Refresh tables">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.96"/>
+          </svg>
+        </button>
+      </div>
+      <div class="table-dropdown-wrap">
+        <select id="tableDropdown" class="table-dropdown" onchange="onTableSelect(this.value)">
+          <option value="">— add a table —</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active Context -->
+    <div class="sidebar-section sidebar-context-section" id="sidebarContextSection" style="display:none;">
+      <div class="sidebar-section-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Active Context
+        <span class="context-count-badge" id="contextCountBadge">0</span>
+      </div>
+      <div class="selected-tables-list" id="selectedTablesList"></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <span class="sidebar-footer-label">QueryMind · Text-to-SQL</span>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- TOP BAR — fixed heading, never changes -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="topbar-brand">
+          <div class="topbar-brand-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </div>
+          <span class="topbar-brand-name">QueryMind</span>
+          <span class="topbar-brand-sep">·</span>
+          <span class="topbar-brand-sub">NL → SQL</span>
+          <span class="topbar-brand-divider"></span>
+          <span class="topbar-active-tab" id="topbarActiveTab">Show Table</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+      </div>
+    </header>
+
+    <!-- HORIZONTAL TAB BAR — Show Table is first -->
+    <nav class="tab-navbar">
+      <button class="tab-nav-btn active" data-tab="tables" onclick="switchTab('tables')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+        </svg>
+        Show Table
+      </button>
+      <div class="tab-navbar-divider"></div>
+      <button class="tab-nav-btn" data-tab="ask" onclick="switchTab('ask')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Ask Questions
+      </button>
+      <button class="tab-nav-btn" data-tab="schema" onclick="switchTab('schema')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+        Schema
+      </button>
+      <button class="tab-nav-btn" data-tab="validate" onclick="switchTab('validate')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        SQL Validator
+      </button>
+      <button class="tab-nav-btn" data-tab="translate" onclick="switchTab('translate')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/>
+          <path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/>
+        </svg>
+        Dialect Translator
+      </button>
+    </nav>
+
+    <!-- ══════════════════════════════════════════
+         TAB: SHOW TABLE
+         Select a table from dropdown → see sample rows
+         Upload files → tables appended to dropdown
+    ══════════════════════════════════════════ -->
+    <section class="tab-panel active" id="tab-tables">
+
+      <!-- Two-column layout: table selector left, file uploader right -->
+      <div class="show-table-grid">
+
+        <!-- LEFT: Table selector -->
+        <div class="section-block show-table-selector-block">
+          <div class="section-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+            </svg>
+            Select a Table
+          </div>
+          <p class="section-desc">Choose a table to preview its structure and sample rows.</p>
+          <div class="show-table-select-row">
+            <select id="showTableSelect" class="table-dropdown show-table-main-select"
+                    onchange="onShowTableSelect(this.value)">
+              <option value="">— choose a table —</option>
+            </select>
+            <button class="sidebar-refresh-btn" onclick="refreshShowTableDropdown()" title="Refresh tables"
+                    style="padding:6px;border:1px solid var(--border2);border-radius:var(--radius-sm);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.96"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: File uploader (appends to dropdown) -->
+        <div class="section-block show-table-upload-block">
+          <div class="section-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Import Files
+            <span class="label-hint">— CSV, Excel, JSON</span>
+          </div>
+          <div class="upload-zone upload-zone-compact" id="uploadZone"
+               ondragover="event.preventDefault();this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleDrop(event)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                 style="color:var(--text-muted);margin-bottom:6px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p class="upload-title" style="font-size:0.8rem;">Drop files or <label class="upload-link" for="fileInput">browse</label></p>
+            <p class="upload-sub">CSV · Excel · JSON</p>
+            <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls,.json"
+                   style="display:none" onchange="handleFileSelect(event)" />
+          </div>
+          <div class="file-list" id="fileList"></div>
+          <div class="upload-actions" id="uploadActions" style="display:none;">
+            <button class="btn-primary btn-sm" id="uploadBtn" onclick="uploadFiles()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Load Files
+            </button>
+            <button class="btn-ghost btn-sm" onclick="clearStagedFiles()">Clear</button>
+          </div>
+          <div id="uploadResult"></div>
+        </div>
+
+      </div>
+
+      <!-- Table preview (shown only when a table is selected) -->
+      <div id="showTablePreview" style="display:none;">
+        <div class="loaded-table-card" id="showTableCard">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Empty state when nothing selected -->
+      <div id="showTableEmpty" class="section-block" style="text-align:center;padding:40px 20px;">
+        <div class="empty-state">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+          </svg>
+          <p>Select a table from the dropdown above to preview its data</p>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">Or import a CSV / Excel / JSON file to add new tables</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         TAB: ASK QUESTIONS
+    ══════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-ask">
+
+      <div class="section-block">
+        <div class="section-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Suggested Questions
+          <span class="label-hint" id="examplesHint">— select a table from the sidebar to get context-aware suggestions</span>
+        </div>
+        <div class="examples-grid" id="examplesGrid"></div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          Your Question
+        </div>
+        <div class="query-input-wrap">
+          <textarea id="questionInput" class="query-textarea"
+            placeholder="Ask anything about your data… e.g. Who are the top 5 customers by revenue?"
+            rows="3"></textarea>
+          <button class="btn-primary btn-generate" onclick="generateSQL()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            Generate SQL
+          </button>
+        </div>
+      </div>
+
+      <div class="section-block" id="sqlReviewPanel" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+            Generated SQL
+          </div>
+          <div class="panel-actions">
+            <button class="btn-icon" onclick="copySQL()" title="Copy SQL">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <pre class="sql-display"><code class="language-sql" id="sqlDisplay"></code></pre>
+        <div class="sql-explanation" id="sqlExplanation" style="display:none;"></div>
+        <div class="review-actions">
+          <button class="btn-primary" onclick="runQuery()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Run Query
+          </button>
+          <button class="btn-ghost" onclick="cancelSQL()">Cancel</button>
+        </div>
+      </div>
+
+      <div class="section-block" id="resultsPanel" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Results
+          </div>
+          <div class="panel-actions">
+            <button class="btn-ghost btn-sm" onclick="downloadCSV()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="answer-box" id="answerBox" style="display:none;"></div>
+        <div class="metrics-row" id="metricsRow"></div>
+        <div class="chart-container" id="chartContainer"></div>
+        <div class="table-wrap" id="resultsTableWrap"></div>
+      </div>
+
+      <div class="blocked-box" id="blockedBox" style="display:none;"></div>
+      <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+        <div class="spinner"></div>
+        <span id="loadingText">Generating SQL…</span>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         TAB: SCHEMA
+    ══════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-schema">
+      <div class="section-block">
+        <div class="section-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+          Schema Explorer
+          <select id="schemaFilterSelect" class="schema-filter-select"
+                  onchange="applySchemaFilter(this.value)">
+            <option value="all">All Tables</option>
+          </select>
+          <button class="btn-ghost btn-sm" onclick="loadSchema()" style="margin-left:auto;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.96"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+        <div class="schema-scroll-box" id="schemaContent">
+          <div class="empty-state">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+            <p>Click Refresh to load schema</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         TAB: SQL VALIDATOR
+    ══════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-validate">
+      <div class="section-block">
+        <div class="section-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          SQL Safety Validator
+        </div>
+        <p class="section-desc">Checks that your SQL is read-only (SELECT / WITH only) and contains no blocked DDL or write keywords.</p>
+        <textarea id="validateInput" class="code-textarea" placeholder="Paste your SQL here…" rows="8">SELECT * FROM customers LIMIT 10;</textarea>
+        <button class="btn-primary" onclick="validateSQL()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Check Safety
+        </button>
+        <div id="validateResult" style="margin-top:1.25rem;"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         TAB: DIALECT TRANSLATOR
+    ══════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-translate">
+      <div class="section-block">
+        <div class="section-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/>
+            <path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/>
+          </svg>
+          SQL Dialect Translator
+        </div>
+        <p class="section-desc">Translate a SQLite query to any of 6 major database dialects using Gemini AI.</p>
+        <div class="translate-grid">
+          <div class="translate-input-col">
+            <label class="field-label">SQLite Query</label>
+            <textarea id="translateInput" class="code-textarea" rows="10">SELECT strftime('%Y-%m', order_date) AS month,
+       SUM(total_amount) AS revenue
+FROM orders
+GROUP BY month
+ORDER BY month;</textarea>
+          </div>
+          <div class="translate-output-col">
+            <div class="translate-output-header">
+              <label class="field-label">Target Dialect</label>
+              <select id="dialectSelect" class="dialect-select">
+                <option value="MySQL">MySQL</option>
+                <option value="PostgreSQL" selected>PostgreSQL</option>
+                <option value="SQL Server">SQL Server</option>
+                <option value="Oracle">Oracle</option>
+                <option value="BigQuery">BigQuery</option>
+                <option value="Snowflake">Snowflake</option>
+              </select>
+            </div>
+            <pre class="sql-display translate-output"><code class="language-sql" id="translateOutputCode">-- Translated SQL will appear here</code></pre>
+          </div>
+        </div>
+        <div class="translate-actions">
+          <button class="btn-primary" onclick="translateSQL()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/>
+              <path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/>
+            </svg>
+            Translate
+          </button>
+          <button class="btn-ghost" id="downloadTranslateBtn" onclick="downloadTranslated()" style="display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download .sql
+          </button>
+        </div>
+        <div id="translateNotes" style="margin-top:1rem;display:none;">
+          <div class="notes-box" id="translateNotesContent"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="/static/js/app.js?v=7"></script>
+</body>
+</html>
