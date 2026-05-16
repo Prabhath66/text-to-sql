@@ -1,189 +1,334 @@
-# QueryMind — Text-to-SQL Assistant
+# 🧠 QueryMind — Text-to-SQL Assistant
 
-A production-grade Natural Language to SQL engine that lets you query any database using plain English. Ask questions, get SQL, review it, execute it, and see results as charts and tables — all in a clean web UI.
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Gemini](https://img.shields.io/badge/Gemini%20AI-LLM-4285F4?style=flat-square&logo=google&logoColor=white)](https://aistudio.google.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Live App](https://img.shields.io/badge/🚀%20Live%20App-Render-46E3B7?style=flat-square)](https://querymind-text-to-sql-api.onrender.com/ui)
 
----
-
-## What It Does
-
-You type a question like **"Who are the top 5 customers by revenue?"** and the system:
-
-1. Converts it to SQL using Google Gemini AI
-2. Shows you the SQL for review before running it
-3. Explains what the SQL does in plain English
-4. Executes it against your SQLite database
-5. Returns the results as a table + auto-selected chart
-6. Gives a plain-English summary of the answer
+> **QueryMind turns plain English into SQL — ask any question about your database, upload your own files, validate queries for safety, and translate SQL across 6 database dialects, all powered by Google Gemini AI.**
 
 ---
 
-## Tech Stack
+## 🌐 Live Deployments
 
-| Layer | Technology |
-|-------|-----------|
-| AI Model | Google Gemini 2.0 Flash via LangChain |
-| Backend | FastAPI (Python) |
-| Database | SQLite via SQLAlchemy |
-| Frontend | Vanilla HTML + CSS + JavaScript |
-| Charts | Plotly.js |
-| SQL Highlighting | Highlight.js |
+| Interface | URL |
+|---|---|
+| 🖥️ **FastAPI Web UI** | [querymind-text-to-sql-api.onrender.com/ui](https://querymind-text-to-sql-api.onrender.com/ui) |
+| 📊 **Streamlit App** | [querymind-text-to-sql-streamlit.onrender.com](https://querymind-text-to-sql-streamlit.onrender.com) |
+| ⚙️ **REST API** | [querymind-text-to-sql-api.onrender.com](https://querymind-text-to-sql-api.onrender.com) |
+| 📖 **API Docs** | [querymind-text-to-sql-api.onrender.com/docs](https://querymind-text-to-sql-api.onrender.com/docs) |
+
+> **Note:** Render free-tier services spin down after inactivity — the first request may take 30–60 seconds to wake up.
 
 ---
 
-## Project Structure
+## 📖 Table of Contents
+
+- [About the Project](#-about-the-project)
+- [How It Works](#-how-it-works)
+- [Features](#-features)
+- [The Five Modules](#-the-five-modules)
+- [Supported File Formats](#-supported-file-formats)
+- [SQL Dialect Support](#-sql-dialect-support)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [API Reference](#-api-reference)
+- [Environment Variables](#-environment-variables)
+- [Deployment](#-deployment)
+- [License](#-license)
+
+---
+
+## 🧠 About the Project
+
+**QueryMind** is a full-stack, AI-powered Text-to-SQL platform with two complete frontend interfaces — a custom **FastAPI HTML/JS Web UI** and a **Streamlit app** — both backed by the same REST API.
+
+It ships with a live **e-commerce SQLite database** (`customers`, `orders`, `products`, `order_items`) so you can start querying immediately with zero setup. Beyond that, users can upload their own **CSV, Excel, or JSON files**, which are loaded as live SQLite tables — no schema configuration required.
+
+QueryMind is not just a query generator. It is a complete SQL workspace:
+
+- **Ask** questions in plain English → get SQL + results instantly
+- **Explore** your schema and preview table data
+- **Validate** queries for read-only safety before running
+- **Translate** SQLite queries into 6 major database dialects
+- **Export** results as CSV with one click
+
+---
+
+## ⚙️ How It Works
 
 ```
-SQL Project/
-├── config.py           # All configuration — API keys, paths, model name
-├── database.py         # Creates and seeds the SQLite database
-├── main.py             # FastAPI app — all API endpoints
-├── sql_chain.py        # Core NL→SQL logic using LangChain + Gemini
-├── validator.py        # SQL safety validation, dialect translation, explanation
-├── file_manager.py     # CSV/Excel/JSON upload → SQLite table conversion
-├── requirements.txt    # Python dependencies
-├── .env                # API keys (not committed to git)
-├── templates/
-│   └── index.html      # Single-page frontend
-└── static/
-    ├── css/style.css   # All styles
-    └── js/app.js       # All frontend JavaScript
+User types a natural language question
+              ↓
+Schema auto-injected into Gemini prompt
+              ↓
+Gemini AI generates a valid SQLite query
+              ↓
+Safety check: SELECT / WITH only? No DDL / writes?
+              ↓
+Query executed against SQLite database
+              ↓
+Results shown in table + available as CSV export
+```
+
+**For dialect translation:**
+
+```
+User pastes a SQLite query + selects target dialect
+              ↓
+Gemini rewrites it for the chosen engine:
+MySQL / PostgreSQL / SQL Server / Oracle / BigQuery / Snowflake
+              ↓
+Output displayed inline + downloadable as .sql file
 ```
 
 ---
 
-## Setup
+## ✨ Features
 
-### 1. Prerequisites
+- 💬 **Natural Language → SQL** — type a question in plain English and get an executable SQL query generated by Gemini AI, with full awareness of your live database schema
+- 📂 **Live File Import** — upload CSV, Excel (`.xlsx`), or JSON files; they are instantly ingested as SQLite tables and become immediately queryable
+- 💡 **Context-Aware Suggestions** — select any table to receive AI-generated suggested questions tailored to that table's columns and data
+- 🗂️ **Schema Explorer** — browse all tables, inspect column names and types, and preview sample rows without writing any SQL
+- 🛡️ **SQL Safety Validator** — paste any SQL to verify it is read-only (`SELECT` / `WITH` only) with no blocked DDL or write keywords, before execution
+- 🔄 **Dialect Translator** — translate any SQLite query to **MySQL, PostgreSQL, SQL Server, Oracle, BigQuery, or Snowflake** syntax using Gemini, with a `.sql` download
+- 📤 **CSV Export** — export any query result to CSV in one click
+- 🔌 **Dual Frontend** — same backend powers both a custom FastAPI HTML/JS UI and a full Streamlit app
+- ⚡ **REST API** — all functionality exposed as clean, documented REST endpoints consumable by any client
 
-- Python 3.11+
-- A Google Gemini API key — get one at [aistudio.google.com](https://aistudio.google.com)
+---
 
-### 2. Create virtual environment
+## 🧩 The Five Modules
+
+| Module | What It Does |
+|---|---|
+| 💬 **NL → SQL** | Accepts a natural language question, auto-injects the live schema into a Gemini prompt, generates SQL, executes it, and returns results |
+| 🗂️ **Schema Explorer** | Lists all tables with column names and data types; previews sample rows for any selected table |
+| 📂 **File Import** | Accepts CSV / Excel / JSON uploads; parses them with Pandas and writes them as new SQLite tables — immediately queryable |
+| 🛡️ **SQL Validator** | Parses any SQL string and enforces read-only compliance — blocks `DROP`, `CREATE`, `ALTER`, `INSERT`, `UPDATE`, `DELETE` |
+| 🔄 **Dialect Translator** | Takes a SQLite query and a target dialect; sends both to Gemini to produce syntactically correct SQL for the chosen database engine |
+
+---
+
+## 📁 Supported File Formats
+
+| Format | Extension | How It's Loaded |
+|---|---|---|
+| **CSV** | `.csv` | `pandas.read_csv()` → SQLite table |
+| **Excel** | `.xlsx`, `.xls` | `pandas.read_excel()` → SQLite table |
+| **JSON** | `.json` | `pandas.read_json()` → SQLite table |
+
+The filename (without extension) becomes the new table name. Files are loaded into the live SQLite database and are immediately available for NL→SQL queries and schema exploration.
+
+---
+
+## 🔄 SQL Dialect Support
+
+The Dialect Translator converts SQLite queries into any of these 6 engines:
+
+| Dialect | What Gemini Handles |
+|---|---|
+| **MySQL** | `strftime` → `DATE_FORMAT`, `AUTOINCREMENT` → `AUTO_INCREMENT`, type mappings |
+| **PostgreSQL** | `SERIAL`, `::` casting, `DATE_TRUNC`, `ILIKE` |
+| **SQL Server** | `TOP`, `GETDATE()`, `IDENTITY`, `NVARCHAR` |
+| **Oracle** | `ROWNUM`, `SYSDATE`, `NUMBER`, `VARCHAR2` |
+| **BigQuery** | `FORMAT_DATE`, backtick table names, `STRUCT`, `ARRAY_AGG` |
+| **Snowflake** | `TO_DATE`, `VARIANT`, `FLATTEN`, Snowflake-native functions |
+
+Output is displayed inline and downloadable as a `.sql` file.
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|---|---|
+| **Language** | Python 3.11 |
+| **LLM** | Google Gemini AI (`google-generativeai`) |
+| **Backend** | FastAPI, Uvicorn |
+| **Frontend 1** | Custom HTML / CSS / JavaScript (served via FastAPI static files) |
+| **Frontend 2** | Streamlit |
+| **Database** | SQLite (via SQLAlchemy) |
+| **Data Processing** | Pandas (CSV / Excel / JSON ingestion) |
+| **Config** | `python-dotenv`, Pydantic v2 |
+| **Deployment** | Render (two separate free-tier services) |
+
+---
+
+## 📁 Project Structure
+
+```
+text-to-sql/
+│
+├── backend/
+│   ├── main.py              # FastAPI app — all REST endpoints + static UI serving
+│   ├── database.py          # SQLAlchemy engine, session, and table reflection
+│   ├── gemini.py            # Gemini AI — NL→SQL generation + dialect translation
+│   ├── validator.py         # SQL safety validator — read-only enforcement logic
+│   ├── file_loader.py       # CSV / Excel / JSON → SQLite table ingestion
+│   ├── data/
+│   │   └── ecommerce.db     # Bundled SQLite DB (customers, orders, products, order_items)
+│   ├── static/              # HTML, CSS, JS assets for the FastAPI Web UI
+│   ├── requirements.txt     # Backend Python dependencies
+│   └── Procfile             # Render deployment start command
+│
+├── streamlit_app/
+│   ├── app.py               # Streamlit frontend — consumes the backend REST API
+│   ├── requirements.txt     # Streamlit Python dependencies
+│   └── Procfile             # Render deployment start command
+│
+├── .env                     # API keys (not committed to git)
+├── .gitignore
+└── README.md
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.11 or higher
+- A **Google Gemini API key** — free at [aistudio.google.com](https://aistudio.google.com)
+
+### 1. Clone the repository
 
 ```bash
-python -m venv sql-env
-sql-env\Scripts\activate        # Windows
-# source sql-env/bin/activate   # Mac/Linux
+git clone https://github.com/Prabhath66/text-to-sql.git
+cd text-to-sql
 ```
 
-### 3. Install dependencies
+### 2. Create and activate a virtual environment
 
 ```bash
+python -m venv venv
+
+# macOS / Linux
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+```
+
+### 3. Install backend dependencies
+
+```bash
+cd backend
 pip install -r requirements.txt
 ```
 
-### 4. Configure API key
+### 4. Set up your API key
 
-Create a `.env` file in the project root:
+Create a `.env` file inside the `backend/` directory:
 
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
-GOOGLE_API_KEY=your_api_key_here
-```
 
-### 5. Create the database
+### 5. Start the backend
 
 ```bash
-python database.py
+uvicorn main:app --reload
 ```
 
-This creates `data/ecommerce.db` with 4 tables (customers, orders, products, order_items) and sample data.
+| Service | Local URL |
+|---|---|
+| REST API | `http://localhost:8000` |
+| Web UI | `http://localhost:8000/ui` |
+| API Docs | `http://localhost:8000/docs` |
 
-### 6. Start the server
+### 6. Start the Streamlit frontend (new terminal)
 
 ```bash
-uvicorn main:app --reload --port 8000
+cd ../streamlit_app
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-### 7. Open the UI
-
-Navigate to **http://localhost:8000/ui**
+Streamlit → `http://localhost:8501`
 
 ---
 
-## Features
+## 📡 API Reference
 
-### Ask Questions
-- Type any natural language question about your data
-- Gemini generates the SQL
-- Review the SQL before running it
-- See results as a table + chart (bar, line, pie, or scatter — auto-detected)
-- Get a plain-English answer summarising the results
-- Export results as CSV
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | Health check — confirms API is running |
+| `POST` | `/query` | Natural language → SQL → execute → return results |
+| `GET` | `/tables` | List all tables in the database |
+| `GET` | `/schema/{table}` | Get columns and data types for a specific table |
+| `GET` | `/preview/{table}` | Preview sample rows from a table |
+| `POST` | `/upload` | Upload CSV / Excel / JSON to create a new SQLite table |
+| `POST` | `/validate` | Check if a SQL query is read-only safe |
+| `POST` | `/translate` | Translate a SQLite query to a target dialect using Gemini |
+| `GET` | `/ui` | Serves the built-in HTML/JS web frontend |
 
-### Show Table
-- Browse any table with a dropdown selector
-- See column names, types, row counts
-- Preview up to 10 sample rows
-- Upload CSV, Excel, or JSON files to add new tables
+Full interactive docs at [querymind-text-to-sql-api.onrender.com/docs](https://querymind-text-to-sql-api.onrender.com/docs) or `http://localhost:8000/docs` locally.
 
-### Schema Explorer
-- View column definitions for any selected table
-- Filter by specific table
-- Uploaded tables are tracked persistently — survive server restarts
+### Example — Natural Language Query
 
-### SQL Validator
-- Paste any SQL and check if it's safe (read-only)
-- Blocks DROP, DELETE, UPDATE, INSERT, and other write operations
+```bash
+curl -X POST https://querymind-text-to-sql-api.onrender.com/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Show me the top 5 customers by total order value"}'
+```
 
-### Dialect Translator
-- Translate any SQLite query to MySQL, PostgreSQL, SQL Server, Oracle, BigQuery, or Snowflake
-- Download the translated query as a `.sql` file
+```json
+{
+  "sql": "SELECT c.name, SUM(o.total_amount) AS total FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.name ORDER BY total DESC LIMIT 5;",
+  "results": [...]
+}
+```
 
----
+### Example — Dialect Translation
 
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/ui` | Serves the web frontend |
-| `GET` | `/` | Health check |
-| `POST` | `/query` | Natural language → SQL (+ optional execution) |
-| `POST` | `/upload` | Upload CSV/Excel/JSON → SQLite tables |
-| `GET` | `/tables` | List all tables with columns and row counts |
-| `GET` | `/schema` | Full schema info + dialect list |
-| `GET` | `/sample/{table}` | Get up to 10 rows from a table |
-| `DELETE` | `/tables/{table}` | Delete an uploaded table |
-| `POST` | `/validate` | Check SQL safety |
-| `POST` | `/translate` | Translate SQL to another dialect |
-
-Full interactive docs at **http://localhost:8000/docs**
+```bash
+curl -X POST https://querymind-text-to-sql-api.onrender.com/translate \
+  -H "Content-Type: application/json" \
+  -d '{"sql": "SELECT strftime(\"%Y-%m\", order_date) AS month FROM orders;", "dialect": "postgresql"}'
+```
 
 ---
 
-## How the AI Calls Work
+## 🔑 Environment Variables
 
-Every time you ask a question and run it, exactly **3 Gemini API calls** are made:
-
-1. **Generate SQL** — converts your question to a SQL query
-2. **Explain SQL** — generates a plain-English description of the query
-3. **Answer** — summarises the query results in 1–3 sentences
-
-The SQL safety validator uses **pure regex** — no AI call needed.
+| Variable | Service | Required | Description |
+|---|---|---|---|
+| `GEMINI_API_KEY` | Backend | ✅ Yes | Google Gemini API key for SQL generation and dialect translation |
+| `BACKEND_URL` | Streamlit | ✅ Yes | Base URL of the FastAPI backend consumed by Streamlit |
 
 ---
 
-## Uploading Your Own Data
+## ☁️ Deployment
 
-1. Go to the **Show Table** tab
-2. Drop a CSV, Excel, or JSON file into the upload zone
-3. Click **Load Files**
-4. The new table appears in the dropdown immediately
-5. You can now ask questions about it in the **Ask Questions** tab
-6. To delete an uploaded table, go to **Schema** tab and click the red **Delete** button on the table card
+Both services are deployed independently on [Render](https://render.com) — free tier, no credit card required.
+
+| Service | Root Directory | Deployed URL |
+|---|---|---|
+| **Backend + Web UI** | `backend` | [querymind-text-to-sql-api.onrender.com](https://querymind-text-to-sql-api.onrender.com) |
+| **Streamlit App** | `streamlit_app` | [querymind-text-to-sql-streamlit.onrender.com](https://querymind-text-to-sql-streamlit.onrender.com) |
+
+**Start commands on Render:**
+
+- Backend: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- Streamlit: `streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true`
+
+**Environment variables to set on Render:**
+
+- Backend: `GEMINI_API_KEY`
+- Streamlit: `GEMINI_API_KEY` and `BACKEND_URL` → `https://querymind-text-to-sql-api.onrender.com`
+
+> Deploy the backend first, copy its URL, then paste it as `BACKEND_URL` when setting up the Streamlit service.
 
 ---
 
-## Environment Variables
+## 📄 License
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GOOGLE_API_KEY` | Yes | Your Google Gemini API key |
+This project is open-source and available under the [MIT License](LICENSE).
 
 ---
 
-## Notes
-
-- The database file is stored at `../data/ecommerce.db` (one level above the project folder)
-- Uploaded tables persist across server restarts — metadata is stored in `_querymind_meta` table inside SQLite
-- Base tables (customers, orders, products, order_items) cannot be deleted
-- SQL results are capped at 500 rows to prevent large payloads
+⭐ **If this project helped you, drop a star!** ⭐
