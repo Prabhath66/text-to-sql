@@ -1,0 +1,24 @@
+services:
+  # ── FastAPI backend + HTML/JS frontend ──────────────────────────────────────
+  - type: web
+    name: querymind-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python -m app.database
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false          # you will enter this manually in Render dashboard
+    autoDeploy: true
+
+  # ── Streamlit frontend ───────────────────────────────────────────────────────
+  - type: web
+    name: querymind-streamlit
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run streamlit_app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: API_URL
+        sync: false          # set this to the querymind-api URL after first deploy
+    autoDeploy: true

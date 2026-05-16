@@ -2,7 +2,9 @@
 /* ═══════════════════════════════════════════════════════════
    QueryMind — Frontend v3
    ═══════════════════════════════════════════════════════════ */
-const API = 'http://localhost:8000';
+const API = window.location.origin === 'http://localhost:8000'
+  ? 'http://localhost:8000'
+  : window.location.origin;
 
 const state = {
   pendingSQL: null, pendingQuestion: null,

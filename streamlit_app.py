@@ -2,12 +2,13 @@
 # streamlit_app.py — Streamlit frontend for QueryMind Text-to-SQL Assistant.
 # Run: streamlit run streamlit_app.py  (FastAPI must be on port 8000)
 
+import os
 import requests
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-API = "http://localhost:8000"
+API = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(
     page_title="QueryMind — Text-to-SQL",
