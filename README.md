@@ -308,7 +308,7 @@ Both services are deployed independently on [Render](https://render.com) — fre
 
 | Service | Root Directory | Deployed URL |
 |---|---|---|
-| **Backend + Web UI** | `backend` | [querymind-text-to-sql-api.onrender.com](https://querymind-text-to-sql-api.onrender.com) |
+| **Backend + Web UI** | `backend` | [querymind-text-to-sql-api.onrender.com](https://querymind-text-to-sql-api.onrender.com/ui) |
 | **Streamlit App** | `streamlit_app` | [querymind-text-to-sql-streamlit.onrender.com](https://querymind-text-to-sql-streamlit.onrender.com) |
 
 **Start commands on Render:**
